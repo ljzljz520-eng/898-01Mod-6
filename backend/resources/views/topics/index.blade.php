@@ -39,10 +39,25 @@
                     </a>
                     <p class="text-neutral-600 text-sm mb-2 line-clamp-2">{{ Str::limit($topic->content, 150) }}</p>
                     <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-neutral-500">
-                        <span>作者：{{ $topic->user->username }}</span>
+                        <span>
+                            作者：<span class="text-neutral-700">{{ $topic->user->username }}</span>
+                            <span class="inline-flex items-center ml-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] px-1.5 py-0.5 rounded-full">
+                                Lv{{ $topic->user->level }}
+                            </span>
+                            <span class="text-amber-500 ml-0.5">⭐{{ $topic->user->points }}</span>
+                        </span>
                         <span>发布时间：{{ $topic->created_at->format('Y-m-d H:i') }}</span>
                         <span>浏览：{{ $topic->view_count }}</span>
                         <span>回复：{{ $topic->reply_count }}</span>
+                        @if($topic->is_charity)
+                            <span class="text-red-500">❤️ 公益</span>
+                        @endif
+                        @if($topic->is_ad)
+                            <span class="text-gray-400">📢 广告</span>
+                        @endif
+                        @if($topic->best_reply_id)
+                            <span class="text-green-500">✓ 已解决</span>
+                        @endif
                     </div>
                 </div>
             </div>

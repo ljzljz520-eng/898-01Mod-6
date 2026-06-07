@@ -18,3 +18,9 @@ Route::post('/logout', [App\Http\Controllers\AuthController::class, 'logout'])->
 Route::resource('topics', App\Http\Controllers\TopicController::class);
 Route::post('topics/{topic}/replies', [App\Http\Controllers\ReplyController::class, 'store'])->name('replies.store')->middleware('auth');
 Route::delete('replies/{reply}', [App\Http\Controllers\ReplyController::class, 'destroy'])->name('replies.destroy')->middleware('auth');
+
+// 最佳回复（Web 端）
+Route::post('topics/{topic}/replies/{reply}/best', [App\Http\Controllers\TopicController::class, 'setBestReply'])->name('topics.set-best-reply')->middleware('auth');
+
+// 公益活动报名（Web 端）
+Route::post('topics/{topic}/join-charity', [App\Http\Controllers\TopicController::class, 'joinCharity'])->name('topics.join-charity')->middleware('auth');

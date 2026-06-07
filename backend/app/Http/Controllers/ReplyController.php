@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\PointLog;
 use App\Models\Reply;
 use App\Models\Topic;
+use App\Services\LevelService;
+use App\Services\PointService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -28,13 +31,27 @@ class ReplyController extends Controller
             return back()->withErrors($validator)->withInput();
         }
 
+        $user = auth()->user();
+        $content = $request->content;
+
         $reply = Reply::create([
             'topic_id' => $topic->id,
-            'user_id' => auth()->id(),
-            'content' => $request->content,
+            'user_id' => $user->id,
+            'content' => $content,
         ]);
 
         $topic->increment('reply_count');
+
+        if ($topic->isQuestion() && $user->id !== $topic->user_id) {
+            PointService::addPoints(
+                $user,
+                LevelService::POINTS_ANSWER,
+                PointLog::TYPE_ANSWER,
+                "回答问题：{$topic->title}",
+                $reply->id,
+                'reply'
+            );
+        }
 
         return back()->with('success', '回复成功');
     }

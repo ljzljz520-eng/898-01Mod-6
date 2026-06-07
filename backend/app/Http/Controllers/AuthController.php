@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Models\User;
+use App\Services\BadgeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -36,6 +37,8 @@ class AuthController extends Controller
 
         Auth::login($user);
 
+        BadgeService::checkAndAward($user);
+
         $request->session()->regenerate();
 
         return redirect()->intended('/');
@@ -53,6 +56,8 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+
+        BadgeService::checkAndAward($user);
 
         // 按需求：注册成功后跳转到登录页，不自动登录
         return redirect()->route('login')->with('success', '注册成功，请登录');

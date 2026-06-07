@@ -11,11 +11,23 @@
         <span class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">{{ category_name($topic->category) }}</span>
     </div>
     <h1 class="text-3xl font-bold text-gray-800 mb-4">{{ $topic->title }}</h1>
-    <div class="flex items-center gap-4 text-sm text-gray-500 mb-6">
-        <span>作者：{{ $topic->user->username }}</span>
+    <div class="flex items-center gap-4 text-sm text-gray-500 mb-6 flex-wrap">
+        <span>
+            作者：<span class="text-gray-700 font-medium">{{ $topic->user->username }}</span>
+            <span class="inline-flex items-center gap-1 ml-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full">
+                Lv{{ $topic->user->level }} {{ $topic->user->level_name }}
+            </span>
+            <span class="text-amber-500 ml-1">⭐ {{ $topic->user->points }}</span>
+        </span>
         <span>发布时间：{{ $topic->created_at->format('Y-m-d H:i') }}</span>
         <span>浏览：{{ $topic->view_count }}</span>
         <span>回复：{{ $topic->reply_count }}</span>
+        @if($topic->is_charity)
+            <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded">❤️ 公益活动</span>
+        @endif
+        @if($topic->is_ad)
+            <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">📢 广告</span>
+        @endif
         @auth
             @if($topic->user_id === auth()->id())
                 <a href="{{ route('topics.edit', $topic) }}" class="text-primary-600 hover:text-primary-700">编辑</a>
@@ -23,6 +35,14 @@
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="text-red-600 hover:text-red-700">删除</button>
+                </form>
+            @endif
+            @if($topic->is_charity && $topic->user_id !== auth()->id())
+                <form method="POST" action="{{ route('topics.join-charity', $topic) }}" class="inline">
+                    @csrf
+                    <button type="submit" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded transition-colors">
+                        ❤️ 报名参与公益
+                    </button>
                 </form>
             @endif
         @endauth
@@ -62,12 +82,31 @@
 
     <div class="space-y-4">
         @forelse($topic->replies as $reply)
-            <div class="card">
+            <div class="card @if($topic->best_reply_id === $reply->id) border-2 border-amber-400 bg-amber-50 @endif">
                 <div class="flex items-start justify-between">
                     <div class="flex-1">
-                        <div class="flex items-center gap-2 mb-2">
+                        <div class="flex items-center gap-2 mb-2 flex-wrap">
                             <span class="font-medium text-gray-800">{{ $reply->user->username }}</span>
+                            <span class="inline-flex items-center gap-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full">
+                                Lv{{ $reply->user->level }} {{ $reply->user->level_name }}
+                            </span>
+                            <span class="text-amber-500 text-xs">⭐ {{ $reply->user->points }}</span>
                             <span class="text-sm text-gray-500">{{ $reply->created_at->format('Y-m-d H:i') }}</span>
+                            @if($topic->best_reply_id === $reply->id)
+                                <span class="inline-flex items-center gap-1 bg-gradient-to-r from-amber-400 to-orange-400 text-white text-xs px-2 py-0.5 rounded-full font-medium">
+                                    🏆 最佳答案
+                                </span>
+                            @endif
+                            @auth
+                                @if($topic->user_id === auth()->id() && !$topic->best_reply_id && $reply->user_id !== auth()->id())
+                                    <form method="POST" action="{{ route('topics.set-best-reply', [$topic, $reply]) }}" class="inline">
+                                        @csrf
+                                        <button type="submit" class="text-xs bg-green-500 hover:bg-green-600 text-white px-2 py-0.5 rounded transition-colors">
+                                            ✓ 采纳为最佳
+                                        </button>
+                                    </form>
+                                @endif
+                            @endauth
                         </div>
                         <p class="text-gray-700 whitespace-pre-wrap">{{ $reply->content }}</p>
                     </div>
